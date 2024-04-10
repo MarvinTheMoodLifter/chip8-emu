@@ -29,37 +29,28 @@ async function run() {
   })
 
   input.addEventListener("change", function(evt) {
-    // Handle file loading
+    // Stop previous game from rendering, if one exists
+    if (anim_frame != 0) {
+      window.cancelAnimationFrame(anim_frame)
+    }
+
+    let file = evt.target.files[0]
+    if (!file) {
+      alert("Failed to read file")
+      return
+    }
+
+    // Load in game as Uint8Array, send to .wasm, start main loop
+    let fr = new FileReader()
+    fr.onload = function(e) {
+      let buffer = fr.result
+      const rom = new Uint8Array(buffer)
+      chip8.reset()
+      chip8.load_game(rom)
+      mainloop(chip8)
+    }
+    fr.readAsArrayBuffer(file)
   }, false)
-}
-
-run().catch(console.error)
-
-input.addEventListener("change", function(evt) {
-  // Stop previous game from rendering, if one exists
-  if (anim_frame != 0) {
-    window.cancelAnimationFrame(anim_frame)
-  }
-
-  let file = evt.target.files[0]
-  if (!file) {
-    alert("Failed to read file")
-    return
-  }
-
-  // Load in game as Uint8Array, send to .wasm, start main loop
-  let fr = new FileReader()
-  fr.onload = function(e) {
-    let buffer = fr.result
-    const rom = new Uint8Array(buffer)
-    chip8.reset()
-    chip8.load_game(rom)
-    mainloop(chip8)
-  }
-  fr.readAsArrayBuffer(file)
-}, false)
-
-function mainloop(chip8) {
 }
 
 function mainloop(chip8) {
@@ -80,3 +71,5 @@ function mainloop(chip8) {
     mainloop(chip8)
   })
 }
+
+run().catch(console.error)
